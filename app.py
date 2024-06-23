@@ -12,14 +12,14 @@ from bs4 import BeautifulSoup
 load_dotenv()
 
 # Set OpenAI API key
-openai.api_key = os.getenv('OPENAI_API_KEY')
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # Create a client instance
 client = openai.Client()
 
 # main assistant
-mainAssistant = os.getenv('ASSISTANT_ID')
-rss_feed_url = os.getenv('RSS_FEED_URL')
+mainAssistant = st.secrets["ASSISTANT_ID"]
+rss_feed_url = st.secrets["RSS_FEED_URL"]
 
 def get_rss_feed_titles_and_urls(url):
     try:
