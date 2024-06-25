@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title>AI Interviewer</title>
+    <link rel="stylesheet" href="./style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Fonts Link For Icons -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,1,0" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link href="https://fonts.googleapis.com/css2?family=Hammersmith+One&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Hammersmith+One&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+        rel="stylesheet">
+    <script src="./script.js" defer></script>
+</head>
+
+<body>
+    <div class="chatbot">
+        <header>
+            <div class="bot-info">
+                <img src="./profile.png" alt="" srcset="">
+                <div class="bot-details">
+                    <div class="bot-name">AI Interviewer<p class="online"></p>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <ul class="chatbox">
+            <li class="chat incoming">
+                <img src="./profile.png" alt="" srcset="">
+                <div class="message-container none">
+                    <div class="message-info">
+                        <div class="user-name">
+                            <h5>AI Interviewer</h5>
+                        </div>
+                        <div class="message-text">
+                            <div class="chat-response">Hi there 👋 How can I help you today?</div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <div class="chat-input">
+            <div class="textarea">
+                <textarea placeholder="Enter a message..." class="textBox" spellcheck="false" required></textarea>
+                <button class="btn-recorder record">
+                    <div class="icon">
+                        <span class="material-symbols-outlined">
+                            mic
+                        </span>
+                        <img src="./bars.svg" alt="" />
+                    </div>
+                    <p>Listening...</p>
+                </button>
+                <span id="send-btn" class="material-symbols-rounded send">send</span>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
