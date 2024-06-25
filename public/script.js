@@ -232,10 +232,10 @@ const createTextChatLi = (message, className) => {
         </div>
         <img src="./user.png" alt="">
     ` : `
-    <img src="./profile.webp" alt="">
+    <img src="./profile.png" alt="">
     <div class="message-container">
         <div class="message-info">
-            <div class="user-name"><h5>Jarvis</h5></div>
+            <div class="user-name"><h5>AI Interviewer</h5></div>
             <div class="message-text">
                 <div class="chat-response">${convertTextForDisplay(message)}</div>
                 <div class="message-audio">
