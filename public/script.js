@@ -153,10 +153,10 @@ function createChatLi(audioUrl, className, textResponse) {
         `;
     } else {
         chatContent = `
-            <img src="./profile.webp" alt="">
+            <img src="./profile.png" alt="">
             <div class="message-container">
                 <div class="message-info">
-                    <div class="user-name"><h5>Jarvis</h5></div>
+                    <div class="user-name"><h5>AI Interviewer</h5></div>
                     <div class="message-text">
                         <div class="chat-response">
                         ${convertTextForDisplay(textResponse)}
@@ -185,10 +185,10 @@ function createThinkingChatLi() {
     chatLi.classList.add("chat", `incoming`);
     let chatContent;
     chatContent = `
-    <img src="./profile.webp" alt="">
+    <img src="./profile.png" alt="">
             <div class="user message-container none">
                 <div class="message-info">
-                    <div class="user-name"><h5>Jarvis</h5></div>
+                    <div class="user-name"><h5>AI Interviewer</h5></div>
                     <div class="message-text">
                         <div class="chat-response">Thinking...</div>
                       </div>
