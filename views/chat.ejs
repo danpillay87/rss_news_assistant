@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <title>AI Interviewer</title>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="../style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Google Fonts Link For Icons -->
     <link rel="stylesheet"
@@ -21,14 +21,14 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Hammersmith+One&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
         rel="stylesheet">
-    <script src="./script.js" defer></script>
+    <script src="../script.js" defer></script>
 </head>
 
 <body>
     <div class="chatbot">
         <header>
             <div class="bot-info">
-                <img src="./profile.png" alt="" srcset="">
+                <img src="../profile.png" alt="" srcset="">
                 <div class="bot-details">
                     <div class="bot-name">AI Interviewer<p class="online"></p>
                     </div>
@@ -37,7 +37,7 @@
         </header>
         <ul class="chatbox">
             <li class="chat incoming">
-                <img src="./profile.png" alt="" srcset="">
+                <img src="../profile.png" alt="" srcset="">
                 <div class="message-container none">
                     <div class="message-info">
                         <div class="user-name">
@@ -58,13 +58,17 @@
                         <span class="material-symbols-outlined">
                             mic
                         </span>
-                        <img src="./bars.svg" alt="" />
+                        <img src="../bars.svg" alt="" />
                     </div>
                     <p>Listening...</p>
                 </button>
                 <span id="send-btn" class="material-symbols-rounded send">send</span>
             </div>
+
         </div>
+        <div id="ass_id" style="display: none;"><%= assistantId %></div>
+        <div id="rss" style="display: none;"><%= rss %></div>
+        <div id="username" style="display: none;"><%= username %></div>
     </div>
 
 </body>

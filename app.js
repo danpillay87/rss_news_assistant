@@ -9,6 +9,8 @@ const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const { admin, db } = require('./firebase'); // Import Firestore and admin instance
+const methodOverride = require('method-override');
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
@@ -19,6 +21,8 @@ const RSS_FEED_URL = process.env.RSS_FEED_URL
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
+app.use(methodOverride('_method')); // Set up method override
+
 
 // Set the view engine to ejs
 app.set('view engine', 'ejs');
@@ -30,8 +34,216 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    res.render('chat');
+app.get('/', async (req, res) => {
+    const usersList = [];
+    try {
+        const snapshot = await db.collection('users').get();
+        snapshot.forEach(doc => {
+            usersList.push({ id: doc.id, ...doc.data() });
+        });
+    } catch (error) {
+        console.error('Error fetching users from Firestore:', error);
+        return res.status(500).send('Internal Server Error');
+    }
+
+    const host = req.get('host'); // Get the current host
+
+    res.render('dashboard', { usersList, host });
+});
+
+async function pollVectorStoreStatus(vectorStoreId) {
+    let isComplete = false;
+    do {
+        const vectorStore = await openai.beta.vectorStores.retrieve(vectorStoreId);
+        if (vectorStore.file_counts.in_progress === 0 && vectorStore.file_counts.failed === 0) {
+            isComplete = true;
+        } else {
+            console.log('Waiting for vector store processing to complete...');
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Poll every 30 seconds
+        }
+    } while (!isComplete);
+    console.log('Vector Store processing completed.');
+}
+
+app.post('/users', upload.array('assistantFiles'), async (req, res) => {
+    req.body.fileRetrieval = req.body.fileRetrieval === 'on';
+    req.body.codeInterpreter = req.body.codeInterpreter === 'on';
+
+    const username = req.body.username;
+    const rss = req.body.rss;
+
+    // Ensure temp directory exists
+    const tempDir = path.join(__dirname, 'temp');
+    if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir);
+    }
+
+    // Upload files to OpenAI
+    const fileIds = [];
+    vectorStoreId = [];
+    if (req.files) {
+        for (const file of req.files) {
+            const tempFilePath = path.join(tempDir, file.originalname);
+            await fs.promises.copyFile(file.path, tempFilePath);
+
+            try {
+                const openaiFile = await openai.files.create({
+                    file: fs.createReadStream(tempFilePath),
+                    purpose: 'assistants',
+                });
+                console.log(openaiFile);
+                fileIds.push(openaiFile.id);
+            } catch (e) {
+                console.log(e);
+            }
+
+            // Clean up the temporary file
+            await fs.promises.unlink(tempFilePath);
+        }
+        if (fileIds.length > 0) {
+            const vectorStore = await openai.beta.vectorStores.create({
+                name: `${username} Chat Files`,
+                file_ids: fileIds,
+                expires_after: {
+                    anchor: "last_active_at",
+                    days: 7
+                }
+            });
+        
+            console.log('Vector Store initiated:', vectorStore);
+        
+            await pollVectorStoreStatus(vectorStore.id);
+            vectorStoreId = [vectorStore.id];
+        }
+    }
+
+
+    let myAssistant;
+    console.log(req.body);
+    console.log(req.body.assistantName);
+
+    const assistantParams = JSON.parse(fs.readFileSync('assistant_params.json', 'utf-8'));
+
+    if (req.body.fileRetrieval && req.body.codeInterpreter) {
+        myAssistant = await openai.beta.assistants.create({
+            instructions: req.body.assistantInstructions,
+            name: req.body.assistantName,
+            tools: [{ type: "code_interpreter" }, { type: "file_search" }, ...assistantParams.tools],
+            model: req.body.model,
+            tool_resources: {
+                "file_search": {
+                  "vector_store_ids": vectorStoreId
+                }
+              }
+        });
+    } else if (!req.body.fileRetrieval && req.body.codeInterpreter) {
+        myAssistant = await openai.beta.assistants.create({
+            instructions: req.body.assistantInstructions,
+            name: req.body.assistantName,
+            tools: [{ type: "code_interpreter" }, ...assistantParams.tools],
+            model: req.body.model,
+            tool_resources: {
+                "file_search": {
+                  "vector_store_ids": vectorStoreId
+                }
+              }
+        });
+    } else if (req.body.fileRetrieval && !req.body.codeInterpreter) {
+        myAssistant = await openai.beta.assistants.create({
+            instructions: req.body.assistantInstructions,
+            name: req.body.assistantName,
+            tools: [{ type: "file_search" }, ...assistantParams.tools],
+            model: req.body.model,
+            tool_resources: {
+                "file_search": {
+                  "vector_store_ids": vectorStoreId
+                }
+              }
+        });
+    } else {
+        myAssistant = await openai.beta.assistants.create({
+            instructions: req.body.assistantInstructions,
+            name: req.body.assistantName,
+            tools: [...assistantParams.tools],
+            model: req.body.model,
+            tool_resources: {
+                "file_search": {
+                  "vector_store_ids": vectorStoreId
+                }
+              }
+        });
+    }
+    console.log(myAssistant);
+
+    console.log("assistant id: ", myAssistant.id);
+
+    // Save data to Firestore
+    const userData = {
+        username: username,
+        rss: rss,
+        assistant: {
+            instructions: req.body.assistantInstructions,
+            name: req.body.assistantName,
+            tools: myAssistant.tools,
+            model: req.body.model,
+            id: myAssistant.id
+        },
+        fileIds: fileIds,
+        fileRetrieval: req.body.fileRetrieval,
+        codeInterpreter: req.body.codeInterpreter
+    };
+
+    try {
+        await db.collection('users').add(userData);
+        res.redirect('/');
+    } catch (error) {
+        console.error('Error saving to Firestore:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+// Delete user route
+app.delete('/users/:id', async (req, res) => {
+    const userId = req.params.id;
+
+    console.log(userId);
+
+    try {
+        await db.collection('users').doc(userId).delete();
+        res.redirect('/');
+    } catch (error) {
+        console.error('Error deleting user from Firestore:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+app.get('/chat/:username', async (req, res) => {
+    const username = req.params.username;
+
+    try {
+        const userSnapshot = await db.collection('users').where('username', '==', username).get();
+        
+        if (userSnapshot.empty) {
+            console.log('No matching docunts.');
+            return res.status(404).send('User not found');
+        }
+
+        let userData;
+        userSnapshot.forEach(doc => {
+            userData = doc.data();
+        });
+
+        console.log(userData);
+
+        res.render('chat', {
+            username: userData.username,
+            rss: userData.rss,
+            assistantId: userData.assistant.id
+        });
+    } catch (error) {
+        console.error('Error retrieving user from Firestore:', error);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
 app.get('/create-thread', async (req, res) => {
@@ -95,11 +307,15 @@ async function extract_article_content(url) {
 
 app.post('/text-message', async (req, res) => {
     console.log("text");
+    console.log(req.body);
     const threadId = req.body.threadId;
     const userMessage = req.body.userMessage;
+    const assistantId = req.body.assistantId;
+    const rss = req.body.rss;
+    const username = req.body.username;
     try {
         // Generate chatbot response
-        const responseText = await generateResponse(userMessage, threadId);
+        const responseText = await generateResponse(userMessage, threadId, assistantId, rss, username);
 
         // Convert response text to audio
         const speech = await openai.audio.speech.create({
@@ -130,9 +346,14 @@ function removeSpecialCharacters(text) {
 
 
 app.post('/voice-message', upload.single('audio'), async (req, res) => {
-    const threadId = req.body.threadId;
+    console.log(req.body);
+    const threadId = req.body.threadId; 
+    const assistantId = req.body.assistantId;
+    const username = req.body.username;
+    const rss = req.body.rss;
+    console.log('voice...', assistantId);
     try {
-        // Convert audio to mp3 format
+        //  audio to mp3 format
         const mp3FilePath = path.join(__dirname, 'uploads', `${req.file.filename}.mp3`);
         await new Promise((resolve, reject) => {
             ffmpeg(req.file.path)
@@ -152,7 +373,7 @@ app.post('/voice-message', upload.single('audio'), async (req, res) => {
         console.log(transcription.text);
 
         // Generate chatbot response
-        const responseText = await generateResponse(transcription.text, threadId);
+        const responseText = await generateResponse(transcription.text, threadId, assistantId, rss, username);
 
         // Remove * and # characters from the response text
         responseTextFormated = removeSpecialCharacters(responseText);
@@ -189,7 +410,8 @@ app.post('/voice-message', upload.single('audio'), async (req, res) => {
 });
 
 
-async function generateResponse(userMessage, thread_id) {
+async function generateResponse(userMessage, thread_id, assistantId, rss, username) {
+    console.log('generating response...', assistantId);
     const message = await openai.beta.threads.messages.create(
         thread_id,
         {
@@ -200,7 +422,7 @@ async function generateResponse(userMessage, thread_id) {
     const run = await openai.beta.threads.runs.create(
         thread_id,
         {
-            assistant_id: ASSISTANT_ID,
+            assistant_id: assistantId,
         }
     );
     const checkStatusAndPrintMessages = async (threadId, runId) => {
@@ -230,7 +452,7 @@ async function generateResponse(userMessage, thread_id) {
 
                     if (funcName === "get_rss_feed_titles_and_urls") {
                         console.log("get_rss_feed_titles_and_urls");
-                        const output = await get_rss_feed_titles_and_urls(RSS_FEED_URL);
+                        const output = await get_rss_feed_titles_and_urls(rss);
                         console.log(output);
                         toolsOutput.push({
                             tool_call_id: action.id,
@@ -276,8 +498,35 @@ async function generateResponse(userMessage, thread_id) {
 
     // Call checkStatusAndPrintMessages function
     const response = await checkStatusAndPrintMessages(thread_id, run.id);
+
+    // Save the chat history to Firestore
+    await saveChatHistory(username, userMessage, response);
+
     return response;
 }
+
+async function saveChatHistory(username, userMessage, aiResponse) {
+    console.log('saving...');
+    const chatRef = db.collection('chatHistory').doc(username);
+    const chatDoc = await chatRef.get();
+
+    if (!chatDoc.exists) {
+        // Create a new document if it doesn't exist
+        await chatRef.set({
+            history: [{ role: 'user', message: userMessage }, { role: 'assistant', message: aiResponse }]
+        });
+    } else {
+        // Update the existing document
+        await chatRef.update({
+            history: admin.firestore.FieldValue.arrayUnion(
+                { role: 'user', message: userMessage },
+                { role: 'assistant', message: aiResponse }
+            )
+        });
+    }
+}
+
+
 const port = 3000;
 
 

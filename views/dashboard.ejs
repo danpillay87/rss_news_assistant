@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+        <link href="https://fonts.googleapis.com/css2?family=Hammersmith+One&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Hammersmith+One&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">   
+        <link rel="shortcut icon" type="image/png" href="./images/login-logo.png"> 
+    <title>User Management</title>
+    <!-- Add links to CSS files and JavaScript here if needed -->
+</head>
+
+<body>
+    <div class="overlay"></div>
+    <aside class="dashboard-sidebar">
+        <div class="sidebar-content">
+            <div class="sidebar-logo">
+                <img src="./images/logo.png" alt="OAM AI Logo" class="logo" />
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item overview">
+                        <a href="/">
+                            <span class="icon material-symbols-outlined">
+                                group
+                                </span>
+                                <span>Users</span>
+                        </a>
+                    </li>
+                    <!-- More nav items -->
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+
+            </div>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <span class="menu-toggle material-symbols-outlined">
+                menu
+            </span>
+        </header>
+        <div class="property-container">
+            <div class="button-container">
+                <button class="add-property-action modul-button">
+                    <span class="icon material-symbols-outlined">
+                        add
+                    </span>
+                    <p>Add User</p>
+                </button>
+            </div>
+            <h2 class="title-header">Users</h2>
+            <div class="property-list">
+                <% for (let user of usersList) {%>  
+                    <div class="property-item">
+                        <div class="first-section">
+                            <div class="property-details">
+                                <h2 class="property-title">Username: <%=user.username%></h2>
+                                <ul class="property-status">
+                                    <span class="tit">User's Chat URL</span>
+                                    <li class="green"><span class="circle"></span><span><a target="_blank" href="http://<%= host %>/chat/<%= user.username %>">http://<%= host %>/chat/<%= user.username %></a></span></li>
+                                    <span class="tit">RSS Feed URL</span>
+                                    <li class="green"><span class="circle"></span><span><%=user.rss%></span></li>
+                                    <span class="tit">Assistant ID</span>
+                                    <li class="green"><span class="circle"></span><span><%=user.assistant.id%></span></li>
+                                    <span class="tit">Model:</span>
+                                    <li class="green"><span class="circle"></span><span><%=user.assistant.model%></span></li>
+                                    <span class="tit">TOOLS</span>
+                                    <% 
+const hasCodeInterpreter = user.assistant.tools.some(tool => tool.type === 'code_interpreter');
+const hasRetrieval = user.assistant.tools.some(tool => tool.type === 'retrieval');
+%>
+<% if (hasCodeInterpreter && hasRetrieval) { %>
+    <li class="green"><span class="circle"></span><span>Code interpreter</span></li>
+    <li class="green"><span class="circle"></span><span>Retrieval</span></li>
+<% } else if (hasCodeInterpreter && !hasRetrieval) { %>
+    <li class="green"><span class="circle"></span><span>Code interpreter</span></li>
+<% } else if (!hasCodeInterpreter && hasRetrieval) { %> 
+    <li class="green"><span class="circle"></span><span>Retrieval</span></li>
+<% } else { %>
+    <li class="green"><span class="circle"></span><span>None</span></li>
+<% } %>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="second-section">
+                            <div class="property-address">
+                                <p class="tit">Assistant Instructions:</p>
+                                <p class="address">
+                                    <%=user.assistant.instructions%>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="delete-btn">
+                            <form action="/users/<%=user.id%>?_method=delete" method="post">
+                                <button type="submit">
+                                    <span class="icon material-symbols-outlined">
+                                        delete
+                                        </span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                <% } %> 
+                <% if (usersList.length == 0 ) {%>
+                     <img class="robot-img" src="./images/assistant.svg" alt="">
+                <% } %> 
+            </div>
+        <div class="modal__container">
+            <div class="modal-overlay"></div>
+            <div class="modal__content">
+                <h4 class="modal__title">Add New User</h4>
+                <form action="/users" method="post" class="propertyForm" enctype="multipart/form-data" id="property-form">
+                    <div class="form-body">
+                        <div class="error-container">
+                            <div class="input-field">
+                                <label for="propertyUserName">Username</label>
+                                <input type="text" id="propertyUserName"
+                                    placeholder="Enter a unique username" name="username"
+                                    class="input">
+                            </div>
+                            <div class="errormessage"></div>
+                        </div>
+                        <div class="error-container">
+                            <div class="input-field">
+                                <label for="rss">RSS Feed URL</label>
+                                <input type="text" id="rss"
+                                    placeholder="Enter the RSS Feed" name="rss"
+                                    class="input">
+                            </div>
+                            <div class="errormessage"></div>
+                        </div>
+                        <div class="error-container">
+                            <div class="input-field">
+                                <label for="propertyName">Assistant Name</label>
+                                <input type="text" id="propertyName"
+                                    placeholder="Enter an Assistant name" name="assistantName"
+                                    class="input">
+                            </div>
+                            <div class="errormessage"></div>
+                        </div>
+                        <div class="error-container">
+                            <div class="input-field">
+                                <label for="assistantInstructions">Assistant Instructions</label>
+                                <textarea name="assistantInstructions" class="input" placeholder="Enter Assistant's Instructions" id="assistantInstructions" cols="30" rows="3"></textarea>
+                                <!-- <input type="text" id="propertyAddress" placeholder="Enter Assistant's Instructions"
+                                    name="propertyAddress" class="input"> -->
+                            </div>
+                            <div class="errormessage"></div>
+                        </div>
+                        <div class="error-container">
+                            <div class="select-box" id="select-box">
+                                <div class="options-container">
+                                    <div class="option">
+                                        <input type="radio" class="radio" id="gpt-4o" value="gpt-4o" name="model">
+                                        <label for="gpt-4o">gpt-4o</label>
+                                    </div>
+                                    <div class="option">
+                                        <input type="radio" class="radio" id="gpt-4-turbo-preview" value="gpt-4-turbo-preview" name="model">
+                                        <label for="gpt-4-turbo-preview">gpt-4-turbo-preview</label>
+                                    </div>
+                                    <div class="option">
+                                        <input type="radio" class="radio" id="gpt-4-1106-preview" value="gpt-4-1106-preview" name="model">
+                                        <label for="gpt-4-1106-preview">gpt-4-1106-preview</label>
+                                    </div>
+                                    <div class="option">
+                                        <input type="radio" class="radio" id="gpt-4-0613" value="gpt-4-0613" name="model">
+                                        <label for="gpt-4-0613">gpt-4-0613</label>
+                                    </div>
+                                    <div class="option">
+                                        <input type="radio" class="radio" id="gpt-4-0125-preview" value="gpt-4-0125-preview" name="model">
+                                        <label for="gpt-4-0125-preview">gpt-4-0125-preview</label>
+                                    </div>
+                                    <div class="option">
+                                        <input type="radio" class="radio" id="gpt-4" value="gpt-4" name="model">
+                                        <label for="gpt-4">gpt-4</label>
+                                    </div>
+                                    <div class="option">
+                                        <input type="radio" class="radio" id="gpt-3.5-turbo-16k" value="gpt-3.5-turbo-16k" name="model">
+                                        <label for="gpt-3.5-turbo-16k">gpt-3.5-turbo-16k</label>
+                                    </div>
+                                    <div class="option">
+                                        <input type="radio" class="radio" id="gpt-3.5-turbo-1106" value="gpt-3.5-turbo-1106" name="model">
+                                        <label for="gpt-3.5-turbo-1106">gpt-3.5-turbo-1106</label>
+                                    </div>
+                                    <div class="option">
+                                        <input type="radio" class="radio" id="gpt-3.5-turbo-0613" value="gpt-3.5-turbo-0613" name="model">
+                                        <label for="gpt-3.5-turbo-0613">gpt-3.5-turbo-0613</label>
+                                    </div>
+                                    <div class="option">
+                                        <input type="radio" class="radio" id="gpt-3.5-turbo-0125" value="gpt-3.5-turbo-0125" name="model">
+                                        <label for="gpt-3.5-turbo-0125">gpt-3.5-turbo-0125</label>
+                                    </div>
+                                    <div class="option">
+                                        <input type="radio" class="radio" id="gpt-3.5-turbo" value="gpt-3.5-turbo" name="model">
+                                        <label for="gpt-3.5-turbo">gpt-3.5-turbo</label>
+                                    </div>
+                                </div>
+                                <div class="selected">
+                                    <span><span class="material-symbols-outlined icon">
+                                        expand_less
+                                        </span></span>
+                                    <p>Model</p>
+                                </div>
+                            </div>
+                            <div class="errormessage"></div>
+                        </div>
+                        <div class="error-container upload-file">
+                            <div class="input-field">
+                                <input type="file" name="assistantFiles" id="additionalFiles" multiple/>
+                                <label for="additionalFiles">
+                                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                                    &nbsp;Choose Assistant's files
+                                </label>
+                                <div class="num-of-files">No Files Chosen</div>
+                                <ul id="files-list"></ul>
+                            </div>
+                            <div class="errormessage"></div>
+                        </div>       
+                        <div class="error-container">
+                            <div class="input-field">
+                                <label class="toggle" for="fileRetrieval">
+                                    <p id="toggleLabel">File retreival</p>
+                                    <input class="toggle__input" type="checkbox" name="fileRetrieval" checked id="fileRetrieval" onchange="toggleText()">
+                                    <div class="toggle__fill"></div>
+                                </label>
+                            </div>
+                            <div class="errormessage"></div>
+                        </div>
+                        <div class="error-container">
+                            <div class="input-field">
+                                <label class="toggle" for="codeInterpreter">
+                                    <p id="toggleLabel">Code Interpreter</p>
+                                    <input class="toggle__input" type="checkbox" name="codeInterpreter" checked id="codeInterpreter" onchange="toggleText()">
+                                    <div class="toggle__fill"></div>
+                                </label>
+                            </div>
+                            <div class="errormessage"></div>
+                        </div>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="reset" class="btn btn-secondary modal__close"><span>CANCEL</span></button>
+                        <input type="submit" class="btn save-btn" style="text-align: center;" value="SAVE">
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="edit_modal__container">
+            <div class="edit_modal-overlay"></div>
+            <div class="modal__content">
+                <div class="error-container none">
+                    <div class="input-field fileCode">
+                        <label for="edit-propertyFileCode">Property file 16 digit passcode</label>
+                        <input type="text" id="edit-propertyFileCode"
+                            placeholder="" disabled
+                            class="input">
+                            <span id="copyButton" class="copy material-symbols-outlined">
+                                content_copy
+                                </span>
+                    </div>
+                    <div class="errormessage"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="./javascript/dashboard.js"></script>
+    <script src="./javascript/propertyValidation.js"></script>
+
+</body>
+
+</html>

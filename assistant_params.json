@@ -1,0 +1,35 @@
+{
+    "tools": [
+        {
+            "type": "function",
+            "function": {
+                "name": "get_rss_feed_titles_and_urls",
+                "description": "Fetches the RSS feed content from a predefined URL, extracts the titles and URLs of the items, and returns them as JSON.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {},
+                  "required": []
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "extract_article_content",
+                "description": "Fetches the content of an article from its URL and extracts the main content to interview the user",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "article_url": {
+                      "type": "string",
+                      "description": "The URL of the article to extract content from."
+                    }
+                  },
+                  "required": [
+                    "article_url"
+                  ]
+                }
+            }
+        }
+    ]
+}

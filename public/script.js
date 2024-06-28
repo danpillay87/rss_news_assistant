@@ -7,6 +7,9 @@ let userAudioBlob;
 let userMessage = null; // Variable to store user's message
 let THREAD = "";
 let textResponse = null;
+const assistantId = document.getElementById('ass_id').textContent;
+const rss = document.getElementById('rss').textContent;
+const username = document.getElementById('username').textContent;
 
 recordBtn.addEventListener("click", () => {
     if (!recording) {
@@ -69,6 +72,9 @@ function sendVoiceMessage(chatElement) {
                 const threadId = data.threadId;
                 THREAD = threadId;
                 formData.append("threadId", THREAD);
+                formData.append("assistantId", assistantId); // Append assistantId
+                formData.append("rss", rss); // Append rss
+                formData.append("username", username); // Append username
                 return fetch("/voice-message", {
                     method: "POST",
                     body: formData,
@@ -88,6 +94,11 @@ function sendVoiceMessage(chatElement) {
             });
     } else {
         formData.append("threadId", THREAD);
+        formData.append("assistantId", assistantId); // Append assistantId
+        formData.append("rss", rss); // Append rss
+        formData.append("username", username); // Append username
+        console.log(formData);
+        console.log(assistantId);
         fetch("/voice-message", {
             method: "POST",
             body: formData,
@@ -149,14 +160,14 @@ function createChatLi(audioUrl, className, textResponse) {
                     </div>
                 </div>
             </div>
-            <img src="./user.png" alt="">
+            <img src="../user.png" alt="">
         `;
     } else {
         chatContent = `
-            <img src="./profile.webp" alt="">
+            <img src="../profile.png" alt="">
             <div class="message-container">
                 <div class="message-info">
-                    <div class="user-name"><h5>Jarvis</h5></div>
+                    <div class="user-name"><h5>AI Interviewer</h5></div>
                     <div class="message-text">
                         <div class="chat-response">
                         ${convertTextForDisplay(textResponse)}
@@ -185,10 +196,10 @@ function createThinkingChatLi() {
     chatLi.classList.add("chat", `incoming`);
     let chatContent;
     chatContent = `
-    <img src="./profile.webp" alt="">
+    <img src="../profile.png" alt="">
             <div class="user message-container none">
                 <div class="message-info">
-                    <div class="user-name"><h5>Jarvis</h5></div>
+                    <div class="user-name"><h5>AI Interviewer</h5></div>
                     <div class="message-text">
                         <div class="chat-response">Thinking...</div>
                       </div>
@@ -230,12 +241,12 @@ const createTextChatLi = (message, className) => {
                 </div>
             </div>
         </div>
-        <img src="./user.png" alt="">
+        <img src="../user.png" alt="">
     ` : `
-    <img src="./profile.webp" alt="">
+    <img src="../profile.png" alt="">
     <div class="message-container">
         <div class="message-info">
-            <div class="user-name"><h5>Jarvis</h5></div>
+            <div class="user-name"><h5>AI Interviewer</h5></div>
             <div class="message-text">
                 <div class="chat-response">${convertTextForDisplay(message)}</div>
                 <div class="message-audio">
@@ -256,7 +267,10 @@ const createTextChatLi = (message, className) => {
 function sendTextMessage(chatElement) {
     const messageData = {
         userMessage: userMessage,
-        threadId: THREAD
+        threadId: THREAD,
+        assistantId: assistantId, // Include assistantId
+        rss: rss, // Include rss
+        username: username // Include username
     };
 
     if (userMessage) {
@@ -338,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Play or stop the audio based on the icon clicked
             if (icon.classList.contains('play-audio')) {
                 // Play the audio
-                audio.play();
+                audio.play(); 
                 // Hide the play icon and show the stop icon
                 icon.classList.add('hide');
                 messageContainer.querySelector('.stop-audio').classList.remove('hide');
