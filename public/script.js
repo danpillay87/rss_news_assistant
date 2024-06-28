@@ -164,7 +164,11 @@ function createChatLi(audioUrl, className, textResponse) {
         `;
     } else {
         chatContent = `
+<<<<<<< HEAD
             <img src="../profile.png" alt="">
+=======
+            <img src="./profile.png" alt="">
+>>>>>>> ed9aa131a32f5ca15694edeec3e4a094c5f2ada3
             <div class="message-container">
                 <div class="message-info">
                     <div class="user-name"><h5>AI Interviewer</h5></div>
@@ -196,7 +200,11 @@ function createThinkingChatLi() {
     chatLi.classList.add("chat", `incoming`);
     let chatContent;
     chatContent = `
+<<<<<<< HEAD
     <img src="../profile.png" alt="">
+=======
+    <img src="./profile.png" alt="">
+>>>>>>> ed9aa131a32f5ca15694edeec3e4a094c5f2ada3
             <div class="user message-container none">
                 <div class="message-info">
                     <div class="user-name"><h5>AI Interviewer</h5></div>
@@ -243,7 +251,11 @@ const createTextChatLi = (message, className) => {
         </div>
         <img src="../user.png" alt="">
     ` : `
+<<<<<<< HEAD
     <img src="../profile.png" alt="">
+=======
+    <img src="./profile.png" alt="">
+>>>>>>> ed9aa131a32f5ca15694edeec3e4a094c5f2ada3
     <div class="message-container">
         <div class="message-info">
             <div class="user-name"><h5>AI Interviewer</h5></div>
